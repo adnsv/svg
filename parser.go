@@ -48,10 +48,10 @@ func (e *element) find(id string) *element {
 			return child
 		}
 		if element := child.find(id); element != nil {
-			return element;
+			return element
 		}
 	}
-	return nil;
+	return nil
 }
 
 func (e *element) decode(decoder *xml.Decoder) error {
@@ -90,7 +90,7 @@ func (e *element) decode(decoder *xml.Decoder) error {
 	return nil
 }
 
-func parse(raw []byte, validate bool) (*element, error) {
+func parse(raw []byte) (*element, error) {
 	decoder := xml.NewDecoder(bytes.NewReader(raw))
 	element, err := decodeFirst(decoder)
 	if err != nil {

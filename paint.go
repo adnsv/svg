@@ -2,7 +2,28 @@ package svg
 
 import "errors"
 
+type RGB struct {
+	r uint8
+	g uint8
+	b uint8
+}
+
+type PaintKind int
+
+const (
+	PaintKindNone = PaintKind(iota)
+	PaintKindRGB
+	PaintKindGradient
+)
+
 type Paint struct {
+	Kind PaintKind
+	Color RGB
+	Gradient *Gradient
+}
+
+type Gradient struct {
+	
 }
 
 // FillRule implements SVG <fill-rule> type

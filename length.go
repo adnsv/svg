@@ -60,9 +60,8 @@ func (v *Length) String() string {
 	return fmt.Sprintf("%g%s", v.Value, v.Units)
 }
 
-// UnmarshalText implements TextUnmarshaler interface for <length>
-func (v *Length) UnmarshalText(text []byte) (err error) {
-	s := string(text)
+// Unmarshal implements unmarshals string for <length>
+func (v *Length) Unmarshal(s string) (err error) {
 	n := len(s)
 	if n == 0 {
 		return errors.New("empty value")
@@ -70,7 +69,7 @@ func (v *Length) UnmarshalText(text []byte) (err error) {
 	if s[n-1] == '%' {
 		v.Units = UnitPercent
 		s = s[:n-1]
-	} else {
+	} else if n > 2 {
 		switch s[n-2:] {
 		case "em":
 			v.Units = UnitEM
@@ -102,3 +101,7 @@ func (v *Length) UnmarshalText(text []byte) (err error) {
 
 // Coordinate corresponds to SVG <coordinate> type
 type Coordinate Length
+
+func (c *Coordinate) Unmarshal(s string) error {
+	return (*Length)(c).Unmarshal(s)
+}
