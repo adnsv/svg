@@ -47,6 +47,8 @@ func (n *Node) read(elt *element) error {
 			it = &Rect{}
 		case "circle":
 			it = &Circle{}
+		case "path":
+			it = &Path{}
 		}
 
 		if it != nil {
@@ -253,6 +255,22 @@ type Circle struct {
 	Cx     Coordinate
 	Cy     Coordinate
 	Radius Length
+}
+
+type Path struct {
+	Shape
+	D string
+}
+
+func (p *Path) read(elt *element) (err error) {
+	err = p.Shape.read(elt)
+	if err != nil {
+		return
+	}
+	if s, ok := elt.attributes["d"]; ok {
+		p.D = s
+	}
+	return
 }
 
 func Parse(in io.Reader) (*Svg, error) {
