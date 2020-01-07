@@ -17,13 +17,108 @@ const (
 )
 
 type Paint struct {
-	Kind PaintKind
-	Color RGB
+	Kind     PaintKind
+	Color    RGB
 	Gradient *Gradient
 }
 
+type GradientUnits int
+
+const (
+	GradientUnitsUnspecified = GradientUnits(iota)
+	GradientUnitsUserSpaceOnUse
+	GradientUnitsObjectBoundingBox
+)
+
+func (gu GradientUnits) String() string {
+	switch gu {
+	case GradientUnitsUserSpaceOnUse:
+		return "userSpaceOnUse"
+	case GradientUnitsObjectBoundingBox:
+		return "objectBoundingBox"
+	default:
+		return ""
+	}
+}
+
+func (gu GradientUnits) Unmarshal(s string) error {
+	switch s {
+	case "userSpaceOnUse":
+		gu = GradientUnitsUserSpaceOnUse
+	case "objectBoundingBox":
+		gu = GradientUnitsObjectBoundingBox
+	default:
+		return errors.New("invalid gradient-units value")
+	}
+	return nil
+}
+
+type SpreadMethod int
+
+const (
+	SpreadMethodUnspecified = SpreadMethod(iota)
+	SpreadMethodPad
+	SpreadMethodReflect
+	SpreadMethodRepeat
+)
+
+func (sm SpreadMethod) String() string {
+	switch sm {
+	case SpreadMethodPad:
+		return "pad"
+	case SpreadMethodReflect:
+		return "reflect"
+	case SpreadMethodRepeat:
+		return "repeat"
+	default:
+		return ""
+	}
+}
+
+func (sm SpreadMethod) Unmarshal(s string) error {
+	switch s {
+	case "pad":
+		sm = SpreadMethodPad
+	case "reflect":
+		sm = SpreadMethodReflect
+	case "round":
+		sm = SpreadMethodRepeat
+	case "":
+		sm = SpreadMethodUnspecified
+	default:
+		return errors.New("invalid spread-method value")
+	}
+	return nil
+}
+
 type Gradient struct {
-	
+	Units             GradientUnits
+	Stops             []GradientStop
+	GradientTransform Transform
+	SpreadMethod      SpreadMethod
+}
+
+type GradientStop struct {
+	Offset  float64
+	Color   RGB
+	Opacity float64
+}
+
+type LinearGradient struct {
+	Gradient
+	X1 Coordinate
+	Y1 Coordinate
+	X2 Coordinate
+	Y2 Coordinate
+}
+
+type RadialGradient struct {
+	Gradient
+	Cx     Coordinate
+	Cy     Coordinate
+	Radius Length
+	Fx     Coordinate
+	Fy     Coordinate
 }
 
 // FillRule implements SVG <fill-rule> type

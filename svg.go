@@ -47,6 +47,8 @@ func (n *Node) read(elt *element) error {
 			it = &Rect{}
 		case "circle":
 			it = &Circle{}
+		case "ellipse":
+			it = &Ellipse{}
 		case "path":
 			it = &Path{}
 		}
@@ -255,6 +257,72 @@ type Circle struct {
 	Cx     Coordinate
 	Cy     Coordinate
 	Radius Length
+}
+
+func (c *Circle) read(elt *element) (err error) {
+	err = c.Shape.read(elt)
+	if err != nil {
+		return
+	}
+	if s, ok := elt.attributes["cx"]; ok {
+		err = c.Cx.Unmarshal(s)
+		if err != nil {
+			return
+		}
+	}
+	if s, ok := elt.attributes["cy"]; ok {
+		err = c.Cy.Unmarshal(s)
+		if err != nil {
+			return
+		}
+	}
+	if s, ok := elt.attributes["r"]; ok {
+		err = c.Radius.Unmarshal(s)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+type Ellipse struct {
+	Shape
+	Cx Coordinate
+	Cy Coordinate
+	Rx Length
+	Ry Length
+}
+
+func (e *Ellipse) read(elt *element) (err error) {
+	err = e.Shape.read(elt)
+	if err != nil {
+		return
+	}
+	if s, ok := elt.attributes["cx"]; ok {
+		err = e.Cx.Unmarshal(s)
+		if err != nil {
+			return
+		}
+	}
+	if s, ok := elt.attributes["cy"]; ok {
+		err = e.Cy.Unmarshal(s)
+		if err != nil {
+			return
+		}
+	}
+	if s, ok := elt.attributes["rx"]; ok {
+		err = e.Rx.Unmarshal(s)
+		if err != nil {
+			return
+		}
+	}
+	if s, ok := elt.attributes["ry"]; ok {
+		err = e.Ry.Unmarshal(s)
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
 type Path struct {
