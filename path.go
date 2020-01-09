@@ -6,6 +6,8 @@ type PathData struct {
 	Vertices []Vertex
 }
 
+type Vertex = Vector
+
 type PathCommand uint8
 
 const (
@@ -14,11 +16,6 @@ const (
 	PathLineTo
 	PathCurveTo
 )
-
-type Vertex struct {
-	X float64
-	Y float64
-}
 
 func (p *PathData) Close() {
 	p.Commands = append(p.Commands, PathClose)
