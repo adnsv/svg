@@ -1,14 +1,17 @@
 package svg
 
-import (
-	"encoding/xml"
-	"errors"
-	"io"
-)
-
 type Item interface {
 	ID() string
-	read(elt *element) error
+}
+
+type sourcer interface {
+	Attr(name string) (v string, exists bool)
+	ForEachChildNode(callback func(tag string, ch sourcer) error) error
+}
+
+type reader interface {
+	Item
+	read(src sourcer) error
 }
 
 type item struct {
@@ -19,8 +22,8 @@ func (it *item) ID() string {
 	return it.id
 }
 
-func (it *item) read(elt *element) error {
-	it.id = elt.attributes["id"]
+func (it *item) read(src sourcer) (err error) {
+	it.id, _ = src.Attr("id")
 	return nil
 }
 
@@ -29,16 +32,15 @@ type Node struct {
 	Items []Item
 }
 
-func (n *Node) read(elt *element) error {
-	err := n.item.read(elt)
+func (n *Node) read(src sourcer) error {
+	err := n.item.read(src)
 	if err != nil {
 		return err
 	}
-	for _, ce := range elt.children {
+	return src.ForEachChildNode(func(tag string, cs sourcer) error {
+		var it reader
 
-		var it Item
-
-		switch ce.name {
+		switch tag {
 		case "g":
 			it = &Group{}
 		case "line":
@@ -54,14 +56,14 @@ func (n *Node) read(elt *element) error {
 		}
 
 		if it != nil {
-			err := it.read(ce)
+			err := it.read(cs)
 			if err != nil {
 				return err
 			}
 			n.Items = append(n.Items, it)
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 type Shape struct {
@@ -78,8 +80,8 @@ type Shape struct {
 	Transform      *Transform
 }
 
-func (s *Shape) read(elt *element) (err error) {
-	err = s.item.read(elt)
+func (s *Shape) read(src sourcer) (err error) {
+	err = s.item.read(src)
 	if err != nil {
 		return
 	}
@@ -91,8 +93,8 @@ type Group struct {
 	Transform *Transform
 }
 
-func (g *Group) read(elt *element) (err error) {
-	err = g.Node.read(elt)
+func (g *Group) read(src sourcer) (err error) {
+	err = g.Node.read(src)
 	if err != nil {
 		return
 	}
@@ -114,15 +116,10 @@ type Svg struct {
 	Height  *Length
 }
 
-func (svg *Svg) read(elt *element) (err error) {
-
-	err = svg.Group.read(elt)
-	if err != nil {
-		return err
-	}
+func (svg *Svg) read(src sourcer) (err error) {
 
 	svg.ViewBox = nil
-	if s, ok := elt.attributes["viewBox"]; ok {
+	if s, ok := src.Attr("viewBox"); ok {
 		svg.ViewBox = &ViewBox{}
 		err = svg.ViewBox.Unmarshal(s)
 		if err != nil {
@@ -130,19 +127,24 @@ func (svg *Svg) read(elt *element) (err error) {
 		}
 	}
 
-	svg.X, err = attrCoordinate(elt, "x")
+	svg.X, err = attrCoordinate(src, "x")
 	if err != nil {
 		return err
 	}
-	svg.Y, err = attrCoordinate(elt, "y")
+	svg.Y, err = attrCoordinate(src, "y")
 	if err != nil {
 		return err
 	}
-	svg.Width, err = attrLength(elt, "width")
+	svg.Width, err = attrLength(src, "width")
 	if err != nil {
 		return err
 	}
-	svg.Height, err = attrLength(elt, "height")
+	svg.Height, err = attrLength(src, "height")
+	if err != nil {
+		return err
+	}
+
+	err = svg.Group.read(src)
 	if err != nil {
 		return err
 	}
@@ -158,30 +160,30 @@ type Line struct {
 	Y2 Coordinate
 }
 
-func (l *Line) read(elt *element) (err error) {
-	err = l.Shape.read(elt)
+func (l *Line) read(src sourcer) (err error) {
+	err = l.Shape.read(src)
 	if err != nil {
 		return
 	}
-	if s, ok := elt.attributes["x1"]; ok {
+	if s, ok := src.Attr("x1"); ok {
 		err = l.X1.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["y1"]; ok {
+	if s, ok := src.Attr("y1"); ok {
 		err = l.Y1.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["x2"]; ok {
+	if s, ok := src.Attr("x2"); ok {
 		err = l.X2.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["y2"]; ok {
+	if s, ok := src.Attr("y2"); ok {
 		err = l.Y2.Unmarshal(s)
 		if err != nil {
 			return
@@ -200,37 +202,37 @@ type Rect struct {
 	Ry     Length
 }
 
-func (r *Rect) read(elt *element) (err error) {
-	err = r.Shape.read(elt)
+func (r *Rect) read(src sourcer) (err error) {
+	err = r.Shape.read(src)
 	if err != nil {
 		return
 	}
-	if s, ok := elt.attributes["x"]; ok {
+	if s, ok := src.Attr("x"); ok {
 		err = r.X.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["y"]; ok {
+	if s, ok := src.Attr("y"); ok {
 		err = r.Y.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["width"]; ok {
+	if s, ok := src.Attr("width"); ok {
 		err = r.Width.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["height"]; ok {
+	if s, ok := src.Attr("height"); ok {
 		err = r.Height.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	sx, okx := elt.attributes["rx"]
-	sy, oky := elt.attributes["ry"]
+	sx, okx := src.Attr("rx")
+	sy, oky := src.Attr("ry")
 	if okx {
 		err = r.Width.Unmarshal(sx)
 		if err != nil {
@@ -259,24 +261,24 @@ type Circle struct {
 	Radius Length
 }
 
-func (c *Circle) read(elt *element) (err error) {
-	err = c.Shape.read(elt)
+func (c *Circle) read(src sourcer) (err error) {
+	err = c.Shape.read(src)
 	if err != nil {
 		return
 	}
-	if s, ok := elt.attributes["cx"]; ok {
+	if s, ok := src.Attr("cx"); ok {
 		err = c.Cx.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["cy"]; ok {
+	if s, ok := src.Attr("cy"); ok {
 		err = c.Cy.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["r"]; ok {
+	if s, ok := src.Attr("r"); ok {
 		err = c.Radius.Unmarshal(s)
 		if err != nil {
 			return
@@ -293,30 +295,30 @@ type Ellipse struct {
 	Ry Length
 }
 
-func (e *Ellipse) read(elt *element) (err error) {
-	err = e.Shape.read(elt)
+func (e *Ellipse) read(src sourcer) (err error) {
+	err = e.Shape.read(src)
 	if err != nil {
 		return
 	}
-	if s, ok := elt.attributes["cx"]; ok {
+	if s, ok := src.Attr("cx"); ok {
 		err = e.Cx.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["cy"]; ok {
+	if s, ok := src.Attr("cy"); ok {
 		err = e.Cy.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["rx"]; ok {
+	if s, ok := src.Attr("rx"); ok {
 		err = e.Rx.Unmarshal(s)
 		if err != nil {
 			return
 		}
 	}
-	if s, ok := elt.attributes["ry"]; ok {
+	if s, ok := src.Attr("ry"); ok {
 		err = e.Ry.Unmarshal(s)
 		if err != nil {
 			return
@@ -330,33 +332,13 @@ type Path struct {
 	D string
 }
 
-func (p *Path) read(elt *element) (err error) {
-	err = p.Shape.read(elt)
+func (p *Path) read(src sourcer) (err error) {
+	err = p.Shape.read(src)
 	if err != nil {
 		return
 	}
-	if s, ok := elt.attributes["d"]; ok {
+	if s, ok := src.Attr("d"); ok {
 		p.D = s
 	}
 	return
-}
-
-func Parse(in io.Reader) (*Svg, error) {
-	decoder := xml.NewDecoder(in)
-	element, err := decodeFirst(decoder)
-	if err != nil {
-		return nil, err
-	}
-	if err := element.decode(decoder); err != nil {
-		return nil, err
-	}
-	if element == nil || element.name != "svg" {
-		return nil, errors.New("invalid root element")
-	}
-	document := &Svg{}
-	err = document.read(element)
-	if err != nil {
-		return nil, err
-	}
-	return document, nil
 }

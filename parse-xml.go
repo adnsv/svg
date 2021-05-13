@@ -3,14 +3,29 @@ package svg
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
+	"io"
 	"strings"
 )
 
-type element struct {
-	name       string
-	attributes map[string]string
-	children   []*element
-	content    string
+func Parse(in io.Reader) (*Svg, error) {
+	decoder := xml.NewDecoder(in)
+	element, err := decodeFirst(decoder)
+	if err != nil {
+		return nil, err
+	}
+	if err := element.decode(decoder); err != nil {
+		return nil, err
+	}
+	if element == nil || element.name != "svg" {
+		return nil, errors.New("invalid root element")
+	}
+	document := &Svg{}
+	err = document.read(element)
+	if err != nil {
+		return nil, err
+	}
+	return document, nil
 }
 
 func newElement(token xml.StartElement) *element {
