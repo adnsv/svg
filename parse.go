@@ -4,7 +4,6 @@ type element struct {
 	name       string
 	attributes map[string]string
 	children   []*element
-	content    string
 }
 
 func (e *element) Attr(name string) (v string, exists bool) {

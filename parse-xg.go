@@ -2,6 +2,7 @@ package svg
 
 import (
 	"errors"
+	"io"
 
 	xg "github.com/adnsv/xmlgo"
 )
@@ -52,4 +53,23 @@ func (x *xgsourcer) ForEachChildNode(callback func(tag string, ch sourcer) error
 		}
 	}
 	return nil
+}
+
+type xgwriter struct {
+	out *xg.Writer
+}
+
+func (x *xgwriter) Attr(k, v string) {
+	x.out.Attr(k, v)
+}
+
+func (x *xgwriter) Child(tag string, callback func(tgt targeter)) {
+	x.out.OTag(tag)
+	callback(x)
+	x.out.CTag()
+}
+
+func WriteXG(w io.Writer, s *Svg) {
+	xgw := xgwriter{out: xg.NewWriter(w)}
+	xgw.Child("svg", func(tgt targeter) { s.write(tgt) })
 }

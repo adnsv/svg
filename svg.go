@@ -2,11 +2,17 @@ package svg
 
 type Item interface {
 	ID() string
+	write(tgt targeter)
 }
 
 type sourcer interface {
 	Attr(name string) (v string, exists bool)
 	ForEachChildNode(callback func(tag string, ch sourcer) error) error
+}
+
+type targeter interface {
+	Attr(name, value string)
+	Child(tag string, callback func(tgt targeter))
 }
 
 type reader interface {
@@ -25,6 +31,12 @@ func (it *item) ID() string {
 func (it *item) read(src sourcer) (err error) {
 	it.id, _ = src.Attr("id")
 	return nil
+}
+
+func (it *item) write(tgt targeter) {
+	if len(it.id) > 0 {
+		tgt.Attr("id", it.id)
+	}
 }
 
 type Node struct {
@@ -66,6 +78,32 @@ func (n *Node) read(src sourcer) error {
 	})
 }
 
+func (n *Node) write(tgt targeter) {
+	n.item.write(tgt)
+	for _, it := range n.Items {
+		tag := ""
+		switch it.(type) {
+		case *Group:
+			tag = "g"
+		case *Line:
+			tag = "line"
+		case *Rect:
+			tag = "rect"
+		case *Circle:
+			tag = "circle"
+		case *Ellipse:
+			tag = "ellipse"
+		case *Path:
+			tag = "path"
+		default:
+			panic("inknown element tag")
+		}
+		tgt.Child(tag, func(t targeter) {
+			it.write(t)
+		})
+	}
+}
+
 type Shape struct {
 	item
 	Fill           *Paint
@@ -88,6 +126,10 @@ func (s *Shape) read(src sourcer) (err error) {
 	return
 }
 
+func (s *Shape) write(tgt targeter) {
+	s.item.write(tgt)
+}
+
 type Group struct {
 	Node
 	Transform *Transform
@@ -99,6 +141,10 @@ func (g *Group) read(src sourcer) (err error) {
 		return
 	}
 	return
+}
+
+func (g *Group) write(tgt targeter) {
+	g.Node.write(tgt)
 }
 
 type Defs struct {
@@ -150,6 +196,13 @@ func (svg *Svg) read(src sourcer) (err error) {
 	}
 
 	return nil
+}
+
+func (svg *Svg) write(tgt targeter) {
+	if svg.ViewBox != nil {
+		tgt.Attr("viewBox", "blah")
+	}
+	svg.Group.write(tgt)
 }
 
 type Line struct {

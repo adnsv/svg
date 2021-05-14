@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
-	"strings"
 )
 
 func Parse(in io.Reader) (*Svg, error) {
@@ -89,12 +88,6 @@ func (e *element) decode(decoder *xml.Decoder) error {
 			}
 
 			e.children = append(e.children, nextElement)
-
-		case xml.CharData:
-			data := strings.TrimSpace(string(element))
-			if data != "" {
-				e.content = string(element)
-			}
 
 		case xml.EndElement:
 			if element.Name.Local == e.name {
