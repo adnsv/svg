@@ -221,3 +221,10 @@ func (b *ViewBox) Unmarshal(s string) (err error) {
 	b.Height, err = strconv.ParseFloat(subs[3], 64)
 	return
 }
+
+func (b *ViewBox) String() string {
+	return strconv.FormatFloat(b.MinX, 'f', -1, 64) + " " +
+		strconv.FormatFloat(b.MinY, 'f', -1, 64) + " " +
+		strconv.FormatFloat(b.Width, 'f', -1, 64) + " " +
+		strconv.FormatFloat(b.Height, 'f', -1, 64)
+}

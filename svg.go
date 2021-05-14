@@ -1,23 +1,12 @@
 package svg
 
+import (
+	"fmt"
+)
+
 type Item interface {
+	writer
 	ID() string
-	write(tgt targeter)
-}
-
-type sourcer interface {
-	Attr(name string) (v string, exists bool)
-	ForEachChildNode(callback func(tag string, ch sourcer) error) error
-}
-
-type targeter interface {
-	Attr(name, value string)
-	Child(tag string, callback func(tgt targeter))
-}
-
-type reader interface {
-	Item
-	read(src sourcer) error
 }
 
 type item struct {
@@ -65,12 +54,14 @@ func (n *Node) read(src sourcer) error {
 			it = &Ellipse{}
 		case "path":
 			it = &Path{}
+		case "text":
+			// todo: implement
 		}
 
 		if it != nil {
 			err := it.read(cs)
 			if err != nil {
-				return err
+				return fmt.Errorf("in <%s>: %s", tag, err)
 			}
 			n.Items = append(n.Items, it)
 		}
@@ -173,19 +164,19 @@ func (svg *Svg) read(src sourcer) (err error) {
 		}
 	}
 
-	svg.X, err = attrCoordinate(src, "x")
+	svg.X, err = readOptCoord(src, "x")
 	if err != nil {
 		return err
 	}
-	svg.Y, err = attrCoordinate(src, "y")
+	svg.Y, err = readOptCoord(src, "y")
 	if err != nil {
 		return err
 	}
-	svg.Width, err = attrLength(src, "width")
+	svg.Width, err = readOptLength(src, "width")
 	if err != nil {
 		return err
 	}
-	svg.Height, err = attrLength(src, "height")
+	svg.Height, err = readOptLength(src, "height")
 	if err != nil {
 		return err
 	}
@@ -200,7 +191,7 @@ func (svg *Svg) read(src sourcer) (err error) {
 
 func (svg *Svg) write(tgt targeter) {
 	if svg.ViewBox != nil {
-		tgt.Attr("viewBox", "blah")
+		tgt.Attr("viewBox", svg.ViewBox.String())
 	}
 	svg.Group.write(tgt)
 }
@@ -243,6 +234,14 @@ func (l *Line) read(src sourcer) (err error) {
 		}
 	}
 	return
+}
+
+func (l *Line) write(tgt targeter) {
+	l.Shape.write(tgt)
+	tgt.Attr("x1", l.X1.String())
+	tgt.Attr("y1", l.Y1.String())
+	tgt.Attr("x2", l.X2.String())
+	tgt.Attr("y2", l.Y2.String())
 }
 
 type Rect struct {

@@ -105,3 +105,7 @@ type Coordinate Length
 func (c *Coordinate) Unmarshal(s string) error {
 	return (*Length)(c).Unmarshal(s)
 }
+
+func (c *Coordinate) String() string {
+	return (*Length)(c).String()
+}
