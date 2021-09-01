@@ -196,24 +196,32 @@ func (t *Transform) Unmarshal(s string) (err error) {
 
 type ViewBox string
 
-func (b ViewBox) Parse() (x, y, w, h float64, err error) {
+type ViewBoxValue struct {
+	MinX   float64
+	MinY   float64
+	Width  float64
+	Height float64
+}
+
+func (b ViewBox) Parse() (vb *ViewBoxValue, err error) {
 	s := strings.Fields(strings.ReplaceAll(string(b), ",", " "))
 	if len(s) != 4 {
 		err = errors.New("invalid viewBox attribute")
 		return
 	}
-	x, err = strconv.ParseFloat(s[0], 64)
+	vb = &ViewBoxValue{}
+	vb.MinX, err = strconv.ParseFloat(s[0], 64)
 	if err != nil {
 		return
 	}
-	y, err = strconv.ParseFloat(s[1], 64)
+	vb.MinY, err = strconv.ParseFloat(s[1], 64)
 	if err != nil {
 		return
 	}
-	w, err = strconv.ParseFloat(s[2], 64)
+	vb.Width, err = strconv.ParseFloat(s[2], 64)
 	if err != nil {
 		return
 	}
-	h, err = strconv.ParseFloat(s[3], 64)
+	vb.Height, err = strconv.ParseFloat(s[3], 64)
 	return
 }
