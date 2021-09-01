@@ -2,9 +2,18 @@ package svg
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 )
+
+// Length corresponds to SVG <length> data type, also
+// can hold <percentage>, "auto", etc
+type Length string
+
+func (l Length) AsNumeric() (v float64, u Units, err error) {
+	return parseLengthOrPercentage(string(l))
+}
+
+type Coordinate = Length // alias, for convenience
 
 // Units defines length and coordinate units
 type Units int
@@ -49,63 +58,43 @@ func (u Units) String() string {
 	}
 }
 
-// Length corresponds to SVG <length> data type
-type Length struct {
-	Value float64
-	Units Units
-}
+var ErrEmptyValue = errors.New("empty value")
 
-// String implements stringer interface for <length>
-func (v *Length) String() string {
-	return fmt.Sprintf("%g%s", v.Value, v.Units)
-}
-
-// Unmarshal implements unmarshals string for <length>
-func (v *Length) Unmarshal(s string) (err error) {
+func parseLengthOrPercentage(s string) (v float64, u Units, e error) {
 	n := len(s)
 	if n == 0 {
-		return errors.New("empty value")
+		e = errors.New("missing or empty value")
+		return
 	}
 	if s[n-1] == '%' {
-		v.Units = UnitPercent
+		u = UnitPercent
 		s = s[:n-1]
 	} else if n > 2 {
 		switch s[n-2:] {
 		case "em":
-			v.Units = UnitEM
+			u = UnitEM
 		case "ex":
-			v.Units = UnitEX
+			u = UnitEX
 		case "px":
-			v.Units = UnitPX
+			u = UnitPX
 		case "in":
-			v.Units = UnitIN
+			u = UnitIN
 		case "cm":
-			v.Units = UnitCM
+			u = UnitCM
 		case "mm":
-			v.Units = UnitMM
+			u = UnitMM
 		case "pt":
-			v.Units = UnitPT
+			u = UnitPT
 		case "pc":
-			v.Units = UnitPC
+			u = UnitPC
 		default:
-			v.Units = UnitNone
+			u = UnitNone
 		}
-		if v.Units != UnitNone {
+		if u != UnitNone {
 			s = s[:n-2]
 		}
 	}
 
-	v.Value, err = strconv.ParseFloat(s, 64)
+	v, e = strconv.ParseFloat(s, 64)
 	return
-}
-
-// Coordinate corresponds to SVG <coordinate> type
-type Coordinate Length
-
-func (c *Coordinate) Unmarshal(s string) error {
-	return (*Length)(c).Unmarshal(s)
-}
-
-func (c *Coordinate) String() string {
-	return (*Length)(c).String()
 }

@@ -11,7 +11,7 @@ type xgwriter struct {
 }
 
 func (x *xgwriter) Attr(k, v string) {
-	x.out.Attr(k, v)
+	x.out.OptStringAttr(k, v)
 }
 
 func (x *xgwriter) Child(tag string, callback func(tgt targeter)) {

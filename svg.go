@@ -146,53 +146,42 @@ type Defs struct {
 // Svg implements SVG <svg> element
 type Svg struct {
 	Group
-	ViewBox *ViewBox
-	X       *Coordinate
-	Y       *Coordinate
-	Width   *Length
-	Height  *Length
+	ViewBox ViewBox
+	X       Coordinate
+	Y       Coordinate
+	Width   Length
+	Height  Length
 }
 
 func (svg *Svg) read(src sourcer) (err error) {
-
-	svg.ViewBox = nil
 	if s, ok := src.Attr("viewBox"); ok {
-		svg.ViewBox = &ViewBox{}
-		err = svg.ViewBox.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		svg.ViewBox = ViewBox(s)
 	}
-
-	svg.X, err = readOptCoord(src, "x")
-	if err != nil {
-		return err
+	if s, ok := src.Attr("x"); ok {
+		svg.X = Coordinate(s)
 	}
-	svg.Y, err = readOptCoord(src, "y")
-	if err != nil {
-		return err
+	if s, ok := src.Attr("y"); ok {
+		svg.Y = Coordinate(s)
 	}
-	svg.Width, err = readOptLength(src, "width")
-	if err != nil {
-		return err
+	if s, ok := src.Attr("width"); ok {
+		svg.Width = Length(s)
 	}
-	svg.Height, err = readOptLength(src, "height")
-	if err != nil {
-		return err
+	if s, ok := src.Attr("height"); ok {
+		svg.Height = Length(s)
 	}
-
 	err = svg.Group.read(src)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (svg *Svg) write(tgt targeter) {
-	if svg.ViewBox != nil {
-		tgt.Attr("viewBox", svg.ViewBox.String())
-	}
+	tgt.Attr("viewBox", string(svg.ViewBox))
+	tgt.Attr("x", string(svg.X))
+	tgt.Attr("y", string(svg.Y))
+	tgt.Attr("width", string(svg.Width))
+	tgt.Attr("height", string(svg.Height))
 	svg.Group.write(tgt)
 }
 
@@ -210,38 +199,26 @@ func (l *Line) read(src sourcer) (err error) {
 		return
 	}
 	if s, ok := src.Attr("x1"); ok {
-		err = l.X1.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		l.X1 = Coordinate(s)
 	}
 	if s, ok := src.Attr("y1"); ok {
-		err = l.Y1.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		l.Y1 = Coordinate(s)
 	}
 	if s, ok := src.Attr("x2"); ok {
-		err = l.X2.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		l.X2 = Coordinate(s)
 	}
 	if s, ok := src.Attr("y2"); ok {
-		err = l.Y2.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		l.Y2 = Coordinate(s)
 	}
 	return
 }
 
 func (l *Line) write(tgt targeter) {
 	l.Shape.write(tgt)
-	tgt.Attr("x1", l.X1.String())
-	tgt.Attr("y1", l.Y1.String())
-	tgt.Attr("x2", l.X2.String())
-	tgt.Attr("y2", l.Y2.String())
+	tgt.Attr("x1", string(l.X1))
+	tgt.Attr("y1", string(l.Y1))
+	tgt.Attr("x2", string(l.X2))
+	tgt.Attr("y2", string(l.Y2))
 }
 
 type Rect struct {
@@ -260,50 +237,34 @@ func (r *Rect) read(src sourcer) (err error) {
 		return
 	}
 	if s, ok := src.Attr("x"); ok {
-		err = r.X.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		r.X = Coordinate(s)
 	}
 	if s, ok := src.Attr("y"); ok {
-		err = r.Y.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		r.Y = Coordinate(s)
 	}
 	if s, ok := src.Attr("width"); ok {
-		err = r.Width.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		r.Width = Length(s)
 	}
 	if s, ok := src.Attr("height"); ok {
-		err = r.Height.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		r.Height = Length(s)
 	}
-	sx, okx := src.Attr("rx")
-	sy, oky := src.Attr("ry")
-	if okx {
-		err = r.Width.Unmarshal(sx)
-		if err != nil {
-			return err
-		}
+	if s, ok := src.Attr("rx"); ok {
+		r.Rx = Length(s)
 	}
-	if oky {
-		err = r.Width.Unmarshal(sy)
-		if err != nil {
-			return err
-		}
+	if s, ok := src.Attr("ry"); ok {
+		r.Ry = Length(s)
 	}
-	if okx && !oky {
-		r.Ry = r.Rx
-	} else if !okx && oky {
-		r.Rx = r.Ry
-	}
-
 	return
+}
+
+func (r *Rect) write(tgt targeter) {
+	r.Shape.write(tgt)
+	tgt.Attr("x", string(r.X))
+	tgt.Attr("y", string(r.Y))
+	tgt.Attr("width", string(r.Width))
+	tgt.Attr("height", string(r.Height))
+	tgt.Attr("rx", string(r.Rx))
+	tgt.Attr("ry", string(r.Ry))
 }
 
 type Circle struct {
@@ -319,24 +280,22 @@ func (c *Circle) read(src sourcer) (err error) {
 		return
 	}
 	if s, ok := src.Attr("cx"); ok {
-		err = c.Cx.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		c.Cx = Coordinate(s)
 	}
 	if s, ok := src.Attr("cy"); ok {
-		err = c.Cy.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		c.Cy = Coordinate(s)
 	}
 	if s, ok := src.Attr("r"); ok {
-		err = c.Radius.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		c.Radius = Length(s)
 	}
 	return
+}
+
+func (c *Circle) write(tgt targeter) {
+	c.Shape.write(tgt)
+	tgt.Attr("cx", string(c.Cx))
+	tgt.Attr("cy", string(c.Cy))
+	tgt.Attr("r", string(c.Radius))
 }
 
 type Ellipse struct {
@@ -353,30 +312,26 @@ func (e *Ellipse) read(src sourcer) (err error) {
 		return
 	}
 	if s, ok := src.Attr("cx"); ok {
-		err = e.Cx.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		e.Cx = Coordinate(s)
 	}
 	if s, ok := src.Attr("cy"); ok {
-		err = e.Cy.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		e.Cy = Coordinate(s)
 	}
 	if s, ok := src.Attr("rx"); ok {
-		err = e.Rx.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		e.Rx = Length(s)
 	}
 	if s, ok := src.Attr("ry"); ok {
-		err = e.Ry.Unmarshal(s)
-		if err != nil {
-			return
-		}
+		e.Ry = Length(s)
 	}
 	return
+}
+
+func (e *Ellipse) write(tgt targeter) {
+	e.Shape.write(tgt)
+	tgt.Attr("cx", string(e.Cx))
+	tgt.Attr("cy", string(e.Cy))
+	tgt.Attr("rx", string(e.Rx))
+	tgt.Attr("ry", string(e.Ry))
 }
 
 type Path struct {
@@ -393,4 +348,9 @@ func (p *Path) read(src sourcer) (err error) {
 		p.D = s
 	}
 	return
+}
+
+func (p *Path) write(tgt targeter) {
+	p.Shape.write(tgt)
+	tgt.Attr("d", p.D)
 }

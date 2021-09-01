@@ -194,37 +194,26 @@ func (t *Transform) Unmarshal(s string) (err error) {
 	return nil
 }
 
-type ViewBox struct {
-	MinX   float64
-	MinY   float64
-	Width  float64
-	Height float64
-}
+type ViewBox string
 
-func (b *ViewBox) Unmarshal(s string) (err error) {
-	subs := strings.Fields(strings.ReplaceAll(s, ",", " "))
-	if len(subs) != 4 {
-		return errors.New("invalid viewBox attribute")
+func (b ViewBox) Parse() (x, y, w, h float64, err error) {
+	s := strings.Fields(strings.ReplaceAll(string(b), ",", " "))
+	if len(s) != 4 {
+		err = errors.New("invalid viewBox attribute")
+		return
 	}
-	b.MinX, err = strconv.ParseFloat(subs[0], 64)
+	x, err = strconv.ParseFloat(s[0], 64)
 	if err != nil {
 		return
 	}
-	b.MinY, err = strconv.ParseFloat(subs[1], 64)
+	y, err = strconv.ParseFloat(s[1], 64)
 	if err != nil {
 		return
 	}
-	b.Width, err = strconv.ParseFloat(subs[2], 64)
+	w, err = strconv.ParseFloat(s[2], 64)
 	if err != nil {
 		return
 	}
-	b.Height, err = strconv.ParseFloat(subs[3], 64)
+	h, err = strconv.ParseFloat(s[3], 64)
 	return
-}
-
-func (b *ViewBox) String() string {
-	return strconv.FormatFloat(b.MinX, 'f', -1, 64) + " " +
-		strconv.FormatFloat(b.MinY, 'f', -1, 64) + " " +
-		strconv.FormatFloat(b.Width, 'f', -1, 64) + " " +
-		strconv.FormatFloat(b.Height, 'f', -1, 64)
 }
