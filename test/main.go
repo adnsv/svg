@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 
@@ -17,18 +16,7 @@ func main() {
 			<rect id="test-frame" x="1" y="1" width="478" height="358" fill="none" stroke="#000000"/>
 		</svg>
 		`
-
-	/*doc := Svg{}
-
-	err := xml.Unmarshal([]byte(data), &doc)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	t.Logf("ver: %s", doc.Version)*/
-
-	reader := bytes.NewReader([]byte(data))
-	doc, err := svg.Parse(reader)
+	doc, err := svg.Parse(data)
 	if err != nil {
 		log.Fatal(err)
 	}

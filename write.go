@@ -20,7 +20,7 @@ func (x *xgwriter) Child(tag string, callback func(tgt targeter)) {
 	x.out.CTag()
 }
 
-func WriteXG(w io.Writer, s *Svg) {
+func Write(w io.Writer, s *Svg) {
 	xgw := xgwriter{out: xg.NewWriter(w)}
 	xgw.Child("svg", func(tgt targeter) { s.write(tgt) })
 }

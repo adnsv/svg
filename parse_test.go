@@ -23,7 +23,7 @@ func TestParser(t *testing.T) {
 	}
 	t.Logf("ver: %s", doc.Version)*/
 
-	element, _ := parse([]byte(data))
+	element, _ := Parse(data)
 
 	if element == nil {
 		return

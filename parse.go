@@ -6,7 +6,7 @@ import (
 	xg "github.com/adnsv/xmlgo"
 )
 
-func ParseXG(in string) (*Svg, error) {
+func Parse(in string) (*Svg, error) {
 	content := xg.Open(in)
 	if !content.NextTag() {
 		err := content.Err()
