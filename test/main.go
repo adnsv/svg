@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 
 	"github.com/adnsv/svg"
@@ -35,4 +36,6 @@ func main() {
 	if doc == nil {
 		log.Fatal("invalid doc")
 	}
+
+	fmt.Printf("done\n")
 }
