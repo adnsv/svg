@@ -114,6 +114,35 @@ func (s *Shape) read(src sourcer) (err error) {
 	if err != nil {
 		return
 	}
+
+	if v, exists := src.Attr("fill"); exists {
+		s.Fill, err = ParsePaint(v)
+		if err != nil {
+			return fmt.Errorf("invalid fill: %w", err)
+		}
+	}
+	if v, exists := src.Attr("fill-rule"); exists {
+		r := FillRuleInherit
+		err = r.UnmarshalText([]byte(v))
+		if err != nil {
+			return fmt.Errorf("invalid fill-rule: %w", err)
+		}
+	}
+
+	if v, exists := src.Attr("fill-opacity"); exists {
+		s.FillOpacity, err = ParseOpacity(v)
+		if err != nil {
+			return fmt.Errorf("invalid fill-opacity: %w", err)
+		}
+	}
+
+	if v, exists := src.Attr("opacity"); exists {
+		s.Opacity, err = ParseOpacity(v)
+		if err != nil {
+			return fmt.Errorf("invalid opacity: %w", err)
+		}
+	}
+
 	return
 }
 

@@ -1,11 +1,13 @@
 package svg
 
-import "errors"
+import (
+	"errors"
+)
 
 type RGB struct {
-	r uint8
-	g uint8
-	b uint8
+	R uint8
+	G uint8
+	B uint8
 }
 
 type PaintKind int

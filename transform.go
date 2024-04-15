@@ -55,8 +55,8 @@ func SkewY(a float64) *Transform {
 	}
 }
 
-func Concatenate(a, b Transform) Transform {
-	return Transform{
+func Concatenate(a, b *Transform) *Transform {
+	return &Transform{
 		A: a.A*b.A + a.C*b.B,
 		B: a.B*b.A + a.D*b.B,
 		C: a.A*b.C + a.C*b.D,
