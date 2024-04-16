@@ -52,6 +52,10 @@ func (n *Node) read(src sourcer) error {
 			it = &Circle{}
 		case "ellipse":
 			it = &Ellipse{}
+		case "polyline":
+			it = &Polygon{}
+		case "polygon":
+			it = &Polygon{}
 		case "path":
 			it = &Path{}
 		case "text":
@@ -84,6 +88,10 @@ func (n *Node) write(tgt targeter) {
 			tag = "circle"
 		case *Ellipse:
 			tag = "ellipse"
+		case *Polyline:
+			tag = "polyline"
+		case *Polygon:
+			tag = "polygon"
 		case *Path:
 			tag = "path"
 		default:
@@ -361,6 +369,48 @@ func (e *Ellipse) write(tgt targeter) {
 	tgt.Attr("cy", string(e.Cy))
 	tgt.Attr("rx", string(e.Rx))
 	tgt.Attr("ry", string(e.Ry))
+}
+
+type Polyline struct {
+	Shape
+	Points string
+}
+
+func (p *Polyline) read(src sourcer) (err error) {
+	err = p.Shape.read(src)
+	if err != nil {
+		return
+	}
+	if s, ok := src.Attr("points"); ok {
+		p.Points = s
+	}
+	return
+}
+
+func (p *Polyline) write(tgt targeter) {
+	p.Shape.write(tgt)
+	tgt.Attr("points", p.Points)
+}
+
+type Polygon struct {
+	Shape
+	Points string
+}
+
+func (p *Polygon) read(src sourcer) (err error) {
+	err = p.Shape.read(src)
+	if err != nil {
+		return
+	}
+	if s, ok := src.Attr("points"); ok {
+		p.Points = s
+	}
+	return
+}
+
+func (p *Polygon) write(tgt targeter) {
+	p.Shape.write(tgt)
+	tgt.Attr("points", p.Points)
 }
 
 type Path struct {

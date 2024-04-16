@@ -12,7 +12,7 @@ type token struct {
 	num    float64
 }
 
-func tokenize(s string) ([]token, error) {
+func tokenizePath(s string) ([]token, error) {
 	ret := []token{}
 	cur, last := 0, len(s)
 
@@ -66,7 +66,7 @@ func tokenize(s string) ([]token, error) {
 
 func ParsePath(s string) (*PathData, error) {
 
-	tokens, err := tokenize(s)
+	tokens, err := tokenizePath(s)
 	if err != nil {
 		return nil, err
 	}
