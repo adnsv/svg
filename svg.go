@@ -109,7 +109,7 @@ type Shape struct {
 	FillRule       *FillRule
 	FillOpacity    *float64
 	Stroke         *Paint
-	StrokeWidth    *Length
+	StrokeWidth    Length
 	StrokeOpacity  *float64
 	StrokeLineCap  *LineCap
 	StrokeLineJoin *LineJoin
@@ -135,6 +135,7 @@ func (s *Shape) read(src sourcer) (err error) {
 		if err != nil {
 			return fmt.Errorf("invalid fill-rule: %w", err)
 		}
+		s.FillRule = &r
 	}
 
 	if v, exists := src.Attr("fill-opacity"); exists {
@@ -142,6 +143,39 @@ func (s *Shape) read(src sourcer) (err error) {
 		if err != nil {
 			return fmt.Errorf("invalid fill-opacity: %w", err)
 		}
+	}
+
+	//if v, exists := src.Attr("stroke"); exists {
+	//	todo
+	//}
+
+	if v, exists := src.Attr("stroke-width"); exists {
+		s.StrokeWidth = Length(v)
+	}
+
+	if v, exists := src.Attr("stroke-opacity"); exists {
+		s.StrokeOpacity, err = ParseOpacity(v)
+		if err != nil {
+			return fmt.Errorf("invalid stroke-opacity: %w", err)
+		}
+	}
+
+	if v, exists := src.Attr("stroke-line-cap"); exists {
+		r := LineCapButt
+		err = r.UnmarshalText([]byte(v))
+		if err != nil {
+			return fmt.Errorf("invalid stroke-line-cap: %w", err)
+		}
+		s.StrokeLineCap = &r
+	}
+
+	if v, exists := src.Attr("stroke-line-join"); exists {
+		r := LineJoinMiter
+		err = r.UnmarshalText([]byte(v))
+		if err != nil {
+			return fmt.Errorf("invalid stroke-line-join: %w", err)
+		}
+		s.StrokeLineJoin = &r
 	}
 
 	if v, exists := src.Attr("opacity"); exists {
@@ -160,6 +194,7 @@ func (s *Shape) write(tgt targeter) {
 
 type Group struct {
 	Node
+	Opacity   *float64
 	Transform *Transform
 }
 
@@ -168,11 +203,19 @@ func (g *Group) read(src sourcer) (err error) {
 	if err != nil {
 		return
 	}
+	if v, exists := src.Attr("opacity"); exists {
+		g.Opacity, err = ParseOpacity(v)
+		if err != nil {
+			return fmt.Errorf("invalid opacity: %w", err)
+		}
+	}
 	return
 }
 
 func (g *Group) write(tgt targeter) {
 	g.Node.write(tgt)
+
+	// todo: Opacity field
 }
 
 type Defs struct {

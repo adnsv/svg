@@ -21,12 +21,12 @@ func ParsePaint(s string) (*Paint, error) {
 		p := &Paint{Kind: PaintKindRGB}
 		if len(s) == 7 {
 			p.Color.R = uint8((v >> 16) & 0xff)
-			p.Color.G = uint8(v & 0xff)
-			p.Color.B = uint8((v >> 8) & 0xff)
+			p.Color.G = uint8((v >> 8) & 0xff)
+			p.Color.B = uint8(v & 0xff)
 		} else {
 			p.Color.R = uint8((v>>16)&0xff) * 0x11
-			p.Color.G = uint8(v&0xff) * 0x11
-			p.Color.B = uint8((v>>8)&0xff) * 0x11
+			p.Color.G = uint8((v>>8)&0xff) * 0x11
+			p.Color.B = uint8(v&0xff) * 0x11
 		}
 		return p, nil
 	}
