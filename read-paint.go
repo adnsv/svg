@@ -24,9 +24,9 @@ func ParsePaint(s string) (*Paint, error) {
 			p.Color.G = uint8((v >> 8) & 0xff)
 			p.Color.B = uint8(v & 0xff)
 		} else {
-			p.Color.R = uint8((v>>16)&0xff) * 0x11
-			p.Color.G = uint8((v>>8)&0xff) * 0x11
-			p.Color.B = uint8(v&0xff) * 0x11
+			p.Color.R = uint8((v>>8)&0xf) * 0x11
+			p.Color.G = uint8((v>>4)&0xf) * 0x11
+			p.Color.B = uint8(v&0xf) * 0x11
 		}
 		return p, nil
 	}
